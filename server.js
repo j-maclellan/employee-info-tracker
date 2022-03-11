@@ -1,5 +1,5 @@
 const express = require('express');
-// const routes = require('./routes');
+const apiRoutes = require('./routes/apiRoutes');
 
 // Imports
 const db = require('./db/connection');
@@ -11,7 +11,7 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-// app.use('/api', apiRoutes);
+app.use('/api', apiRoutes);
 
 // Default response for any other request (Not found)
 app.use((req, res) => {
