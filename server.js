@@ -5,8 +5,9 @@ const inquirer = require('inquirer');
 
 // Imports
 const db = require('./db/connection');
-const { response } = require('express');
 const res = require('express/lib/response');
+const { use } = require('./routes/apiRoutes');
+
 
 
 const PORT = process.env.PORT || 3001;
@@ -32,7 +33,7 @@ const userPrompt = () => {
             choices: ['View all Departments', 'View all Roles', 'View all Employees', 
                       'Add a Department', 'Add a Role', 'Add an Employee', 'Update an Employee Role',
                      'Update Manager', 'View Employees by Manager', 'View Employees by Department', 
-                     'Delete Department', 'Delete Roles', 'Delete Employees', 'View total Department budget']
+                     'Delete Department', 'Delete Role', 'Delete Employee', 'View total Department budget']
         }
     ])
     .then((answers) => {
@@ -60,29 +61,29 @@ const userPrompt = () => {
                 updateEmployee();
             }
             if (action === 'Delete Department') {
-
+                deleteDepartment();
             }
             if (action === 'Delete Role') {
-                
+                deleteRole();
             }
             if (action === 'Delete Employee') {
-                
+                deleteEmployee();
             }
             if (action === 'Update Manager') {
-                
+                updateManager();
             }
             if (action === 'View Employees by Department') {
-                
+                byDepartment();
             }
             if (action === 'View Employees by Manager') {
-                
+                byManager();
             }
             if (action === 'View total Department budget') {
-                
+                totalBudget();
             }
     });
 };
-
+// View Departments
 const viewAllDepartments = () => {
     const sql = `SELECT * FROM departments`;
     db.query(sql, (err, response) => {
@@ -92,7 +93,7 @@ const viewAllDepartments = () => {
         userPrompt();
     });
 };
-
+// View all Roles
 const viewAllRoles = () => {
     const sql = `SELECT roles.*, departments.name
                  AS department_name
@@ -105,7 +106,7 @@ const viewAllRoles = () => {
         userPrompt();
     });
 };
-
+// View all Employees
 const viewAllEmployees = () => {
     const sql = `SELECT employees.*, roles.title AS role_title, roles.salary AS role_salary,
                  departments.name AS department
@@ -118,7 +119,7 @@ const viewAllEmployees = () => {
         userPrompt();
     });
 };
-
+// Add an Employee
 const addEmployee = () => {
     inquirer.prompt([
         {
@@ -201,7 +202,7 @@ const addEmployee = () => {
         });
     });
 };
-
+// Add a Role
 const addRole = () => {
     inquirer.prompt([
         {
@@ -251,7 +252,7 @@ const addRole = () => {
         });
     });  
 };
-
+// Add a Department
 const addDepartment = () => {
     inquirer.prompt([
         {
@@ -271,7 +272,7 @@ const addDepartment = () => {
         })
     })
 }
-
+// Update Employee Role
 const updateEmployee = () => {
     const employeeSql = `SELECT id, first_name, last_name FROM employees`;
     
@@ -318,6 +319,146 @@ const updateEmployee = () => {
     
     })  
 }
+// Delete Department
+const deleteDepartment = () => {
+    const sql = `SELECT * FROM departments`;
+    db.query(sql, (err, response) => {
+        if (err) throw error;
+        const departments = response.map(({ id, name }) => ({ name: name, value: id}))
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'delDept',
+                message: "Which department would you like to delete?",
+                choices: departments
+            }
+        ])
+        .then(answers => {
+            const delDept = answers.delDept
+            const params = [delDept];
+            const sql = `DELETE FROM departments WHERE departments.id = ?`
+            db.query(sql, params, (err) => {
+                if (err) throw error;
+                console.log(`Deleted ${answers.delDept} Department from database`);
+                viewAllDepartments();
+            })
+        })
+    })
+}
+// Delete Role
+const deleteRole = () => {
+    const sql = `SELECT * FROM roles`;
+    db.query(sql, (err, response) => {
+        if (err) throw error;
+        const delRoles = response.map(({ id, title }) => ({ name: title, value: id }));
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'delRole',
+                message: 'Which role would you like to delete?',
+                choices: delRoles
+            }
+        ])
+        .then(answers => {
+            const roleId = answers.delRole;
+            const params = [roleId];
+            const sql = `DELETE FROM roles WHERE roles.id = ?`;
+            db.query(sql, params, (err) => {
+                if (err) throw error;
+                console.log(`Deleted ${answers.delRole} Role from database`);
+                viewAllRoles();
+            })
+        })
+    })
+}
+// Delete Employee
+const deleteEmployee = () => {
+    const sql = `SELECT * FROM employees`;
+    db.query(sql, (err, response) => {
+        if (err) throw error;
+        const delEmployee = response.map(({ id, first_name, last_name }) => ({ name: first_name + " " + last_name, value: id }));
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'delEmployee',
+                message: 'Which employee would you like to delete?',
+                choices: delEmployee
+            }
+        ])
+        .then(answers => {
+            const employeeId = answers.delEmployee;
+            const params = [employeeId];
+            const sql = `DELETE FROM employees WHERE employees.id = ?`;
+            db.query(sql, params, (err) => {
+                if (err) throw error;
+                console.log(`Deleted ${answers.delEmployee} from database`);
+                viewAllEmployees();
+            })
+        })
+    })
+}
+// Update Employee's Manager
+const updateManager = () => {
+    const sql = `SELECT id, first_name, last_name FROM employees`;
+    db.query(sql, (err, response) => {
+        if (err) throw error;
+        const employeeNames = response.map(({ id, first_name, last_name }) => ({ name: first_name + " " + last_name, value: id }));
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'employee',
+                message: "What employee has a new Manager?",
+                choices: employeeNames
+            },
+            {
+                type: 'list',
+                name: 'newManager',
+                message: 'Who is their new Manager?',
+                choices: employeeNames
+            }
+        ])
+        .then(answers => {
+            const employeeId = answers.employee.id;
+            const managerId = answers.newManager.id;
+            const params = [managerId, employeeId]
+            const sql = `UPDATE employees SET employees.manager_id = ? WHERE employees.id = ?`;
+            db.query(sql, params, (err) => {
+                if (err) throw error;
+                console.log(`Updated ${answers.employee}'s New Manager ${answers.newManager}`);
+                viewAllEmployees();
+            })
+        })
+    })
+}
+// Sort By Manager
+const byManager = () => {
+    const managerSql = `SELECT * FROM employees
+                        WHERE employees.manager_id IS NULL`;
+    db.query(managerSql, (err, response) => {
+        if (err) throw (error);
+        const selManager = response.map(({ id, first_name, last_name}) => ({ name: first_name + " " + last_name, value: id }));
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'selManager',
+                message: "Which manager's employees do you want to see?",
+                choices: selManager
+            }
+        ])
+        .then(answers => {
+            const managerId = answers.selManager;
+            
+            const params = [managerId];
+            const sql = `SELECT first_name, last_name FROM employees
+                         WHERE employees.manager_id = ?`
+            db.query(sql, params, (err, response) =>{
+                if (err) throw error;
+                console.table(response);
+                userPrompt();
+            });
+        });
+    });
+};
 // Start server after DB connection
 db.connect(err => {
     if (err) throw err;
