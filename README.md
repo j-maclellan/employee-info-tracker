@@ -24,6 +24,8 @@ This application uses SQl queries and Inquirer prompts to populate, save, and vi
 
 ## Walkthrough Video
 
+[Video](https://drive.google.com/file/d/1yU5hu38lLhH3A6YmpyIpzjLRviS8rjJX/view)
+
 ## Contributor
 
 [John Maclellan](https://github.com/j-maclellan)

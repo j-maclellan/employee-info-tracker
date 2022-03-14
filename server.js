@@ -30,7 +30,9 @@ const userPrompt = () => {
             type: 'list',
             message: 'What would you like to do?',
             choices: ['View all Departments', 'View all Roles', 'View all Employees', 
-                      'Add a Department', 'Add a Role', 'Add an Employee', 'Update an Employee Role']
+                      'Add a Department', 'Add a Role', 'Add an Employee', 'Update an Employee Role',
+                     'Update Manager', 'View Employees by Manager', 'View Employees by Department', 
+                     'Delete Department', 'Delete Roles', 'Delete Employees', 'View total Department budget']
         }
     ])
     .then((answers) => {
@@ -57,11 +59,31 @@ const userPrompt = () => {
             if (action === 'Update an Employee Role') {
                 updateEmployee();
             }
+            if (action === 'Delete Department') {
+
+            }
+            if (action === 'Delete Role') {
+                
+            }
+            if (action === 'Delete Employee') {
+                
+            }
+            if (action === 'Update Manager') {
+                
+            }
+            if (action === 'View Employees by Department') {
+                
+            }
+            if (action === 'View Employees by Manager') {
+                
+            }
+            if (action === 'View total Department budget') {
+                
+            }
     });
 };
 
 const viewAllDepartments = () => {
-    // console.log('Departments')
     const sql = `SELECT * FROM departments`;
     db.query(sql, (err, response) => {
         if (err) throw error;
@@ -72,7 +94,10 @@ const viewAllDepartments = () => {
 };
 
 const viewAllRoles = () => {
-    const sql = `SELECT * FROM roles`;
+    const sql = `SELECT roles.*, departments.name
+                 AS department_name
+                 FROM roles LEFT JOIN departments
+                 ON roles.department_id = departments.id`;
     db.query(sql, (err, response) => {
         if (err) throw error;
         console.table(response);
@@ -82,7 +107,11 @@ const viewAllRoles = () => {
 };
 
 const viewAllEmployees = () => {
-    const sql = `SELECT * FROM employees`;
+    const sql = `SELECT employees.*, roles.title AS role_title, roles.salary AS role_salary,
+                 departments.name AS department
+                 FROM employees 
+                 LEFT JOIN roles ON employees.role_id = roles.id
+                 LEFT JOIN departments ON roles.department_id = departments.id`;
     db.query(sql, (err, response) => {
         if (err) throw error;
         console.table(response);
@@ -121,7 +150,7 @@ const addEmployee = () => {
     ])
     .then(answers => {
         const params = [answers.firstName, answers.lastName]
-        const roleSql = `SELECT role.id, role.title FROM role`;
+        const roleSql = `SELECT roles.id, roles.title FROM roles`;
         db.query(roleSql, (err, response) => {
             if (err) throw error;
             const roles = response.map(({ id, title }) => ({ name: title, value: id }));
@@ -211,7 +240,7 @@ const addRole = () => {
             .then(roleDepartment => {
                 const dept = roleDepartment.department;
                 params.push(dept);
-                const sql = `INSERT INTO roles (title, salary, departments_id)
+                const sql = `INSERT INTO roles (title, salary, department_id)
                              VALUES (?, ?, ?)`;
                 db.query(sql, params, (err) => {
                     if (err) throw error;
