@@ -136,22 +136,30 @@ const addEmployee = () => {
             .then(employeeRole => {
                 const role = employeeRole.role;
                 params.push(role);
-                const managerSql = `SELECT * FROM employees`;
+                const managerSql = `SELECT * FROM employees
+                                    WHERE employees.manager_id IS NULL`;
                 db.query(managerSql, (err, response) => {
                     if (err) throw error;
-                    const managers = response.map(({ id, first_name, last_name }) => ({ name: first_name + "" + last_name, value: id }));
+                    const managers = response.map(({ id, first_name, last_name }) => ({ name: first_name + " " + last_name, value: id }));
+                    let none = 'NULL'
+                    managers.push(none);
                     inquirer.prompt([
                         {
                             type: 'list',
                             name: 'manager',
                             message: "Who is the employee's manager?",
-                            choices: managers
+                            choices: managers 
                         }
                     ])
                     .then(employeeManager => {
-                        const manager = employeeManager.manager;
-                        params.push(manager);
-                        const sql = `INSERT INTO employees (first_name, last_name, roles_id, manager_id)
+                        if (employeeManager.manager !== 'NULL') {
+                            const manager = employeeManager.manager;
+                            params.push(manager);
+                        } else {
+                            const manager = null;
+                            params.push(manager);
+                        }
+                        const sql = `INSERT INTO employees (first_name, last_name, role_id, manager_id)
                                      VALUES (?,?,?,?)`;
                         db.query(sql, params, (err) => {
                             if (err) throw error;
@@ -250,8 +258,8 @@ const updateEmployee = () => {
             }
         ])
         .then(answers => {
-            const id = answers.employee.id;
-            const roleSql = `SELECT id, title FROM roles`;
+            const id = answers.employee;    
+            const roleSql = `SELECT roles.id, roles.title FROM roles`;
             db.query(roleSql, (err, response) => {
                 if (err) throw error;
                 const roles = response.map(({ id, title }) => ({ name: title, value: id}));
@@ -264,10 +272,10 @@ const updateEmployee = () => {
                     }
                 ])
                 .then(answers => {
-                    const newRole = answers.roles.id;
-                    const sql = `UPDATE employees SET roles_id = ?
+                    const newRole = answers.roles;
+                    const sql = `UPDATE employees SET role_id = ?
                                  WHERE id = ?`;
-                    params = [id, newRole]
+                    params = [newRole, id]
                     db.query(sql, params, (error) => {
                         if (error) throw error;
                         console.log(`Updated ${answers.employee} info in the database`);

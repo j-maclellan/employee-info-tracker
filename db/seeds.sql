@@ -4,7 +4,7 @@ VALUES
     ('Sales'),
     ('Warehouse');
 
-INSERT INTO roles (title, salary, departments_id)
+INSERT INTO roles (title, salary, department_id)
 VALUES 
     ('Lead Accountant', 80000.00, 1),
     ('Accountant', 60000.00, 1),
@@ -13,7 +13,7 @@ VALUES
     ('Warehouse Lead', 50000.00, 3),
     ('Warehouse Worker', 30000.00, 3);
 
-INSERT INTO employees (first_name, last_name, roles_id, manager_id)
+INSERT INTO employees (first_name, last_name, role_id, manager_id)
 VALUES 
     ('Sam', 'Smith', 3, NULL),
     ('Kyle', 'Briar', 4, 3),
