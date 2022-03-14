@@ -32,8 +32,8 @@ const userPrompt = () => {
             message: 'What would you like to do?',
             choices: ['View all Departments', 'View all Roles', 'View all Employees', 
                       'Add a Department', 'Add a Role', 'Add an Employee', 'Update an Employee Role',
-                     'Update Manager', 'View Employees by Manager', 'View Employees by Department', 
-                     'Delete Department', 'Delete Role', 'Delete Employee', 'View total Department budget']
+                     'Update Manager', 'View Employees by Manager',
+                     'Delete Department', 'Delete Role', 'Delete Employee']
         }
     ])
     .then((answers) => {
@@ -72,14 +72,8 @@ const userPrompt = () => {
             if (action === 'Update Manager') {
                 updateManager();
             }
-            if (action === 'View Employees by Department') {
-                byDepartment();
-            }
             if (action === 'View Employees by Manager') {
                 byManager();
-            }
-            if (action === 'View total Department budget') {
-                totalBudget();
             }
     });
 };
